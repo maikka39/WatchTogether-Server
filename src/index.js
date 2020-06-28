@@ -40,7 +40,7 @@ io.on("connection", (socket) => {
   socket.on("join", ({
     room,
     name
-  }, callback) => {
+  }, joinCallback) => {
     const {
       error,
       user
@@ -50,7 +50,7 @@ io.on("connection", (socket) => {
       room
     })
 
-    if (error) return callback(error);
+    if (error) return joinCallback(error);
 
     socket.join(user.room);
 
@@ -68,44 +68,44 @@ io.on("connection", (socket) => {
       text: `${user.name} has joined!`
     })
 
-    callback();
-  })
+    socket.on('sendMessage', (message, callback) => {
+      const user = getUser(socket.id);
 
-  socket.on('sendMessage', (message, callback) => {
-    const user = getUser(socket.id);
+      text = sanitizeMessage(message.text);
 
-    text = sanitizeMessage(message.text);
+      io.to(user.room).emit('message', {
+        user: user.name,
+        text
+      });
 
-    io.to(user.room).emit('message', {
-      user: user.name,
-      text
+      logger.info("Message: %s", JSON.stringify({
+        id: socket.id,
+        text
+      }));
+
+      callback();
     });
 
-    logger.info("Message: %s", JSON.stringify({
-      id: socket.id,
-      text
-    }));
+    socket.on("disconnect", () => {
+      const user = removeUser(socket.id);
 
-    callback();
-  });
+      logger.info("User left: %s", JSON.stringify({
+        id: socket.id
+      }))
 
-  socket.on("disconnect", () => {
-    const user = removeUser(socket.id);
+      if (user) {
+        io.to(user.room).emit('message', {
+          user: ADMIN_USER,
+          text: `${user.name} has left.`
+        });
+        io.to(user.room).emit('roomData', {
+          users: getUsersInRoom(user.room)
+        });
+      }
 
-    logger.info("User left: %s", JSON.stringify({
-      id: socket.id
-    }))
+    })
 
-    if (user) {
-      io.to(user.room).emit('message', {
-        user: ADMIN_USER,
-        text: `${user.name} has left.`
-      });
-      io.to(user.room).emit('roomData', {
-        users: getUsersInRoom(user.room)
-      });
-    }
-
+    joinCallback();
   })
 })
 

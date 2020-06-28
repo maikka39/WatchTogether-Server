@@ -68,10 +68,12 @@ io.on("connection", (socket) => {
       text: `${user.name} has joined!`
     })
 
-    socket.on('sendMessage', (message, callback) => {
+    socket.on('message', ({
+      text
+    }, callback) => {
       const user = getUser(socket.id);
 
-      text = sanitizeMessage(message.text);
+      text = sanitizeMessage(text);
 
       io.to(user.room).emit('message', {
         user: user.name,
@@ -79,7 +81,7 @@ io.on("connection", (socket) => {
       });
 
       logger.info("Message: %s", JSON.stringify({
-        id: socket.id,
+        id: user.id,
         text
       }));
 

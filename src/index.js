@@ -1,12 +1,13 @@
 const express = require("express");
 const socketio = require("socket.io");
 const http = require("http");
-const morgan = require("morgan");
 const cors = require("cors");
+const logger = require("./utils/logger");
 
 const {
   sanitizeMessage
 } = require('./utils/sanitize');
+
 const {
   PORT,
   ADMIN_USER
@@ -21,15 +22,21 @@ const {
 
 const router = require("./router")
 
+logger.info("Starting server...")
+
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-app.use(morgan("tiny"));
 app.use(router);
 app.use(cors());
 
 io.on("connection", (socket) => {
+  logger.info("New connection: %s", JSON.stringify({
+    id: socket.id,
+    ip: socket.conn.remoteAddress,
+  }));
+
   socket.on("join", ({
     room,
     name
@@ -74,16 +81,20 @@ io.on("connection", (socket) => {
       text
     });
 
-    console.log("Message send:", {
+    logger.info("Message: %s", JSON.stringify({
       id: socket.id,
       text
-    })
+    }));
 
     callback();
   });
 
   socket.on("disconnect", () => {
     const user = removeUser(socket.id);
+
+    logger.info("User left: %s", JSON.stringify({
+      id: socket.id
+    }))
 
     if (user) {
       io.to(user.room).emit('message', {
@@ -98,4 +109,4 @@ io.on("connection", (socket) => {
   })
 })
 
-server.listen(PORT, () => console.log(`Server has started on port ${PORT}`));
+server.listen(PORT, () => logger.info(`Server has started on port ${PORT}`));

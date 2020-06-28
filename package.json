@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node node_modules/nodemon/bin/nodemon.js src/index.js",
+    "dev": "LOG_LEVEL=debug nodemon src/index.js | node_modules/.bin/pino-pretty",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maik de Kruif (maik_dev)",
@@ -14,10 +14,12 @@
     "dompurify": "^2.0.12",
     "express": "^4.17.1",
     "jsdom": "^16.2.2",
-    "morgan": "^1.10.0",
+    "pino": "^6.3.2",
+    "pino-tee": "^0.3.0",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.4",
+    "pino-pretty": "^4.0.0"
   }
 }

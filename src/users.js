@@ -1,3 +1,4 @@
+const logger = require("./utils/logger");
 const {
   ADMIN_USER
 } = require("./config")
@@ -27,7 +28,7 @@ function addUser({
     room
   };
 
-  console.log("User joined:", user);
+  logger.info("User joined: %s", JSON.stringify(user));
 
   users.push(user);
 

@@ -1,3 +1,10 @@
+const {
+  ADMIN_USER
+} = require("./config")
+const {
+  sanitize
+} = require('./utils/sanitize');
+
 const users = [];
 
 function addUser({
@@ -5,10 +12,10 @@ function addUser({
   name,
   room
 }) {
-  name = name.trim();
-  room = room.trim();
+  name = sanitize(name);
+  room = sanitize(room);
 
-  if (users.find((user) => user.room === room && user.name === name)) {
+  if (name === ADMIN_USER || users.find((user) => user.room === room && user.name === name)) {
     return {
       error: "Username is taken"
     };
@@ -36,7 +43,6 @@ function removeUser(id) {
   if (i !== -1) {
     return users.splice(i, 1)[0];
   }
-
 }
 
 function getUser(id) {

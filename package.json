@@ -4,7 +4,8 @@
   "description": "WatchTogether is an online service that lets you watch a video together with your friends without being in the same room!",
   "main": "src/index.js",
   "scripts": {
-    "start": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "dev": "node node_modules/nodemon/bin/nodemon.js src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maik de Kruif (maik_dev)",
@@ -14,7 +15,9 @@
     "express": "^4.17.1",
     "jsdom": "^16.2.2",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.4",
     "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
   }
 }

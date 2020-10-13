@@ -11,15 +11,13 @@
   "author": "Maik de Kruif (maik_dev)",
   "dependencies": {
     "cors": "^2.8.5",
-    "dompurify": "^2.0.12",
     "express": "^4.17.1",
-    "jsdom": "^16.2.2",
-    "pino": "^6.3.2",
+    "pino": "^6.7.0",
     "pino-tee": "^0.3.0",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.4",
-    "pino-pretty": "^4.0.0"
+    "pino-pretty": "^4.3.0"
   }
 }

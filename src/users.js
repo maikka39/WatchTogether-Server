@@ -1,31 +1,26 @@
-const logger = require("./utils/logger");
-const {
-  ADMIN_USER
-} = require("./config")
-const {
-  sanitize
-} = require('./utils/sanitize');
+const { logger } = require("./utils/logger");
+const { ADMIN_USER } = require("./config");
+const { sanitize } = require("./utils/sanitize");
 
 const users = [];
 
-function addUser({
-  id,
-  name,
-  room
-}) {
+function addUser({ id, name, room }) {
   name = sanitize(name);
   room = sanitize(room);
 
-  if (name === ADMIN_USER || users.find((user) => user.room === room && user.name === name)) {
+  if (
+    name === ADMIN_USER ||
+    users.find((user) => user.room === room && user.name === name)
+  ) {
     return {
-      error: "Username is taken"
+      error: "Username is taken",
     };
   }
 
   const user = {
     id,
     name,
-    room
+    room,
   };
 
   logger.info("User joined: %s", JSON.stringify(user));
@@ -33,10 +28,9 @@ function addUser({
   users.push(user);
 
   return {
-    user
-  }
+    user,
+  };
 }
-
 
 function removeUser(id) {
   const i = users.findIndex((user) => user.id === id);
@@ -58,5 +52,5 @@ module.exports = {
   addUser,
   removeUser,
   getUser,
-  getUsersInRoom
+  getUsersInRoom,
 };

@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
 
     socket.join(user.room);
 
-    io.to(user.room).emit("newUser", {
+    io.to(user.room).emit("usersUpdated", {
       users: getUsersInRoom(user.room),
     });
 
@@ -91,7 +91,7 @@ io.on("connection", (socket) => {
           user: ADMIN_USER,
           text: `${user.name} has left.`,
         });
-        io.to(user.room).emit("roomData", {
+        io.to(user.room).emit("usersUpdated", {
           users: getUsersInRoom(user.room),
         });
       }

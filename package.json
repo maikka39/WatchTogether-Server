@@ -4,7 +4,7 @@
   "description": "WatchTogether is an online service that lets you watch a video together with your friends without being in the same room!",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "nodemon src/index.js",
     "dev": "LOG_LEVEL=debug nodemon src/index.js | node_modules/.bin/pino-pretty",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,7 +17,7 @@
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4",
+    "nodemon": "^2.0.5",
     "pino-pretty": "^4.3.0"
   }
 }

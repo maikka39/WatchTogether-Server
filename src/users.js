@@ -24,9 +24,6 @@ function addUser({ id, name, room }) {
         };
       }
     }
-    
-    existingUser.name = name;
-    existingUser.room = room;
 
     logger.info("User moved: %s", JSON.stringify({
       id: id,
@@ -35,6 +32,9 @@ function addUser({ id, name, room }) {
       old_name: existingUser.name,
       new_name: name
     }));
+
+    existingUser.name = name;
+    existingUser.room = room;
 
     return {
       user: existingUser,

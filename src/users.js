@@ -8,12 +8,43 @@ function addUser({ id, name, room }) {
   name = sanitize(name);
   room = sanitize(room);
 
-  if (
-    name === ADMIN_USER ||
-    users.find((user) => user.room === room && user.name === name)
-  ) {
+  if (name === null || name === "" || room === null || room === "") {
     return {
-      error: "Username is taken",
+      error: "Incorrect params",
+    };
+  }
+
+  let existingUser = getUser(id);
+  if (existingUser !== undefined) {
+    if (existingUser.name !== name) {
+      let { error } = checkName(name, true);
+      if (error) {
+        return {
+          error,
+        };
+      }
+    }
+    
+    existingUser.name = name;
+    existingUser.room = room;
+
+    logger.info("User moved: %s", JSON.stringify({
+      id: id,
+      old_room: existingUser.room,
+      new_room: room,
+      old_name: existingUser.name,
+      new_name: name
+    }));
+
+    return {
+      user: existingUser,
+    };
+  }
+
+  let { error } = checkName(name);
+  if (error) {
+    return {
+      error,
     };
   }
 
@@ -46,6 +77,19 @@ function getUser(id) {
 
 function getUsersInRoom(room) {
   return users.filter((user) => user.room === room);
+}
+
+function checkName(name) {
+  if (
+    name === ADMIN_USER ||
+    users.find((user) => user.room === room && user.name === name)
+  ) {
+    return {
+      error: "Username is taken",
+    };
+  }
+
+  return {}
 }
 
 module.exports = {

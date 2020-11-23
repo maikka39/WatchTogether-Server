@@ -31,6 +31,14 @@ io.on("connection", (socket) => {
   );
 
   socket.on("join", ({ room, name }, joinCallback) => {
+    for (let room in io.sockets.adapter.sids[socket.id]) {
+      if (room === socket.id) {
+        continue;
+      }
+
+      socket.leave(room);
+    }
+    
     const { error, user } = addUser({
       id: socket.id,
       name,

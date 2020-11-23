@@ -17,7 +17,7 @@ function addUser({ id, name, room }) {
   let existingUser = getUser(id);
   if (existingUser !== undefined) {
     if (existingUser.name !== name) {
-      let { error } = checkName(name, true);
+      let { error } = checkName(name, room);
       if (error) {
         return {
           error,
@@ -41,7 +41,7 @@ function addUser({ id, name, room }) {
     };
   }
 
-  let { error } = checkName(name);
+  let { error } = checkName(name, room);
   if (error) {
     return {
       error,
@@ -79,7 +79,7 @@ function getUsersInRoom(room) {
   return users.filter((user) => user.room === room);
 }
 
-function checkName(name) {
+function checkName(name, room) {
   if (
     name === ADMIN_USER ||
     users.find((user) => user.room === room && user.name === name)

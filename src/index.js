@@ -30,37 +30,37 @@ io.on("connection", (socket) => {
     })
   );
 
-  socket.on("join", ({ room, name }, joinCallback) => {
-    for (let room in socket.rooms) {
-      if (room === socket.id) {
-        continue;
+  socket.on("join", ({}, joinCallback) => {
+    socket.on("enterRoom", ({ room, name }, callback) => {
+      for (let room in socket.rooms) {
+        if (room !== socket.id) {
+          socket.leave(room);
+        }
       }
+      
+      const { error, user } = addUser({
+        id: socket.id,
+        name,
+        room,
+      });
 
-      socket.leave(room);
-    }
-    
-    const { error, user } = addUser({
-      id: socket.id,
-      name,
-      room,
-    });
+      if (error) return callback(error);
 
-    if (error) return joinCallback(error);
+      socket.join(user.room);
 
-    socket.join(user.room);
+      io.to(user.room).emit("usersUpdated", {
+        users: getUsersInRoom(user.room),
+      });
 
-    io.to(user.room).emit("usersUpdated", {
-      users: getUsersInRoom(user.room),
-    });
+      // socket.emit('message', {
+      //   user: ADMIN_USER,
+      //   text: `Welcome ${user.name}, you're in room ${user.room}.`
+      // })
 
-    // socket.emit('message', {
-    //   user: ADMIN_USER,
-    //   text: `Welcome ${user.name}, you're in room ${user.room}.`
-    // })
-
-    socket.broadcast.to(user.room).emit("message", {
-      user: ADMIN_USER,
-      text: `${user.name} has joined!`,
+      socket.broadcast.to(user.room).emit("message", {
+        user: ADMIN_USER,
+        text: `${user.name} has joined!`,
+      });
     });
 
     socket.on("message", ({ text }, callback) => {

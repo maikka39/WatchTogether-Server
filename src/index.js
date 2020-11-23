@@ -31,7 +31,7 @@ io.on("connection", (socket) => {
   );
 
   socket.on("join", ({ room, name }, joinCallback) => {
-    for (let room in io.sockets.adapter.sids[socket.id]) {
+    for (let room in socket.rooms) {
       if (room === socket.id) {
         continue;
       }

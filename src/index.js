@@ -24,185 +24,218 @@ app.use(router);
 app.use(cors());
 
 io.on("connection", (socket) => {
-  logger.info({
-    info: {
-      event: "connection",
-      id: socket.id,
-      ip: socket.conn.remoteAddress,
-    }
-  });
-
-  socket.on("join", ({ room, name }, joinCallback) => {
+  try {
     logger.info({
       info: {
-        event: "join",
+        event: "connection",
         id: socket.id,
-        name,
-        room,
+        ip: socket.conn.remoteAddress,
       }
     });
 
-    let userMoved = false;
+    socket.on("join", ({ room, name }, joinCallback) => {
+      try {
+        logger.info({
+          info: {
+            event: "join",
+            id: socket.id,
+            name,
+            room,
+          }
+        });
 
-    if (Users.exists(socket.id)) {
-      userMoved = true;
+        let userMoved = false;
 
-      var { error, user } = Users.move(socket.id, room)
+        if (Users.exists(socket.id)) {
+          userMoved = true;
 
-      for (let room in socket.rooms) {
-        if (room !== socket.id && room !== user.room) {
-          socket.leave(room);
+          var { error, user } = Users.move(socket.id, room)
 
-          io.to(room).emit("message", {
-            user: ADMIN_USER,
-            text: `${user.name} has left.`,
-          });
+          for (let room in socket.rooms) {
+            if (room !== socket.id && room !== user.room) {
+              socket.leave(room);
 
-          io.to(room).emit("usersUpdated", {
-            users: Users.getFromRoom(room),
-          });
+              io.to(room).emit("message", {
+                user: ADMIN_USER,
+                text: `${user.name} has left.`,
+              });
+
+              io.to(room).emit("usersUpdated", {
+                users: Users.getFromRoom(room),
+              });
+            }
+          }
+
+        } else {
+          var { error, user } = Users.add(socket.id, name, room);
         }
+
+        if (error) {
+          joinCallback(error);
+          return;
+        }
+
+        socket.join(user.room);
+
+        io.to(user.room).emit("usersUpdated", {
+          users: Users.getFromRoom(user.room),
+        });
+
+        // socket.emit('message', {
+        //   user: ADMIN_USER,
+        //   text: `Welcome ${user.name}, you're in room ${user.room}.`
+        // })
+
+        socket.broadcast.to(user.room).emit("message", {
+          user: ADMIN_USER,
+          text: `${user.name} has joined!`,
+        });
+
+        if (userMoved) {
+          joinCallback();
+          return;
+        }
+
+        socket.on("message", ({ text }, callback) => {
+          try {
+            logger.info({
+              info: {
+                event: "message",
+                id: user.id,
+                text,
+              }
+            });
+
+            text = sanitize(text);
+
+            io.to(user.room).emit("message", {
+              user: user.name,
+              text,
+            });
+
+            callback();
+          } catch (error) {
+            logger.error(error)
+          }
+        });
+
+        socket.on("play", ({ progress }) => {
+          try {
+            logger.info({
+              info: {
+                event: "play",
+                id: user.id,
+                room: user.room,
+                progress,
+              }
+            });
+
+            io.to(user.room).emit("play", {
+              progress,
+            });
+          } catch (error) {
+            logger.error(error)
+          }
+        });
+
+        socket.on("pause", ({ progress }) => {
+          try {
+            logger.info({
+              info: {
+                event: "pause",
+                id: user.id,
+                room: user.room,
+                progress,
+              }
+            });
+
+            io.to(user.room).emit("pause", {
+              progress,
+            });
+          } catch (error) {
+            logger.error(error)
+          }
+        }); 
+
+        socket.on("changeVideo", ({ url }) => {
+          try {
+            logger.info({
+              info: {
+                event: "changeVideo",
+                id: user.id,
+                room: user.room,
+                url,
+              }
+            });
+
+            io.to(user.room).emit("changeVideo", {
+              url,
+            });
+          } catch (error) {
+            logger.error(error)
+          }
+        });
+
+        socket.on("sync", ({ url, progress, playing }) => {
+          try {
+            logger.info({
+              info: {
+                event: "sync",
+                id: user.id,
+                room: user.room,
+                url,
+                progress,
+                playing,
+              }
+            });
+
+            io.to(user.room).emit("sync", {
+              url,
+              progress,
+              playing,
+            });
+          } catch (error) {
+            logger.error(error)
+          }
+        });
+
+        socket.on("disconnect", () => {
+          try {
+            logger.info({
+              info: {
+                event: "disconnect",
+                id: socket.id,
+              }
+            });
+
+            if (!user) {
+              return;
+            }
+
+            Users.remove(user.id)
+
+            io.to(user.room).emit("message", {
+              user: ADMIN_USER,
+              text: `${user.name} has left.`,
+            });
+
+            io.to(user.room).emit("usersUpdated", {
+              users: Users.getFromRoom(user.room),
+            });
+          } catch (error) {
+            logger.error(error)
+          }
+        });
+
+        joinCallback();
+    
+      } catch (error) {
+        logger.error(error)
       }
-
-    } else {
-      var { error, user } = Users.add(socket.id, name, room);
-    }
-
-    if (error) {
-      joinCallback(error);
-      return;
-    }
-
-    socket.join(user.room);
-
-    io.to(user.room).emit("usersUpdated", {
-      users: Users.getFromRoom(user.room),
     });
-
-    // socket.emit('message', {
-    //   user: ADMIN_USER,
-    //   text: `Welcome ${user.name}, you're in room ${user.room}.`
-    // })
-
-    socket.broadcast.to(user.room).emit("message", {
-      user: ADMIN_USER,
-      text: `${user.name} has joined!`,
-    });
-
-    if (userMoved) {
-      joinCallback();
-      return;
-    }
-
-    socket.on("message", ({ text }, callback) => {
-      logger.info({
-        info: {
-          event: "message",
-          id: user.id,
-          text,
-        }
-      });
-
-      text = sanitize(text);
-
-      io.to(user.room).emit("message", {
-        user: user.name,
-        text,
-      });
-
-      callback();
-    });
-
-    socket.on("play", ({ progress }) => {
-      logger.info({
-        info: {
-          event: "play",
-          id: user.id,
-          room: user.room,
-          progress,
-        }
-      });
-
-      io.to(user.room).emit("play", {
-        progress,
-      });
-    });
-
-    socket.on("pause", ({ progress }) => {
-      logger.info({
-        info: {
-          event: "pause",
-          id: user.id,
-          room: user.room,
-          progress,
-        }
-      });
-
-      io.to(user.room).emit("pause", {
-        progress,
-      });
-    }); 
-
-    socket.on("changeVideo", ({ url }) => {
-      logger.info({
-        info: {
-          event: "changeVideo",
-          id: user.id,
-          room: user.room,
-          url,
-        }
-      });
-
-      io.to(user.room).emit("changeVideo", {
-        url,
-      });
-    });
-
-    socket.on("sync", ({ url, progress, playing }) => {
-      logger.info({
-        info: {
-          event: "sync",
-          id: user.id,
-          room: user.room,
-          url,
-          progress,
-          playing,
-        }
-      });
-
-      io.to(user.room).emit("sync", {
-        url,
-        progress,
-        playing,
-      });
-    });
-
-    socket.on("disconnect", () => {
-      logger.info({
-        info: {
-          event: "disconnect",
-          id: socket.id,
-        }
-      });
-
-      if (!user) {
-        return;
-      }
-
-      Users.remove(user.id)
-
-      io.to(user.room).emit("message", {
-        user: ADMIN_USER,
-        text: `${user.name} has left.`,
-      });
-
-      io.to(user.room).emit("usersUpdated", {
-        users: Users.getFromRoom(user.room),
-      });
-    });
-
-    joinCallback();
-  });
+  } catch (error) {
+    logger.error(error)
+  }
 });
 
 server.listen(PORT, () => logger.info(`Server has started on port ${PORT}`));

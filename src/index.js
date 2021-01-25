@@ -11,8 +11,6 @@ const { PORT, ADMIN_USER } = require("./config");
 const { Users } = require("./users");
 
 const router = require("./router");
-const { join } = require("path");
-const users = require("./users");
 
 logger.info("Starting server...");
 
@@ -155,7 +153,7 @@ io.on("connection", (socket) => {
           } catch (error) {
             logger.error(error)
           }
-        }); 
+        });
 
         socket.on("changeVideo", ({ url }) => {
           try {
@@ -228,7 +226,7 @@ io.on("connection", (socket) => {
         });
 
         joinCallback();
-    
+
       } catch (error) {
         logger.error(error)
       }
